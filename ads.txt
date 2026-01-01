@@ -1,2 +1,1 @@
-# AdSense ads.txt (발급받은 값으로 아래 한 줄을 그대로 교체하십시오)
-google.com, pub-XXXXXXXXXXXXXXXX, DIRECT, f08c47fec0942fa0
+google.com, pub-4131973605995019, DIRECT, f08c47fec0942fa0
