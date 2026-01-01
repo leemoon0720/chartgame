@@ -1,0 +1,2 @@
+# AdSense ads.txt
+# AdSense에서 제공하는 ads.txt 한 줄을 아래에 그대로 붙여넣으십시오.
