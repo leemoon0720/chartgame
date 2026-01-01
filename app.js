@@ -440,6 +440,228 @@ function pickRandomSlice(total){
   return {start, end: start + need};
 }
 
+
+// =========================
+// Scenario slice picker (풍부한 예: 돌파/급등락/거래대금 스파이크/추세/박스)
+// - 내부 로직만 추가(화면/UI 변경 없음)
+// - 데이터가 늘어나도 자동으로 "재밌는 구간"을 우선 선택
+// =========================
+const SCN = Object.freeze({
+  STEP: 3,              // 후보 시작점 스캔 간격
+  TOP_PER_LABEL: 20,     // 라벨별 상위 후보 개수
+  MIN_SEP: 8,            // 같은 라벨 후보 간 최소 간격(중복 방지)
+  PICK_TOP_N: 5,         // 상위 N개 중 랜덤 선택(매번 다른 예)
+  WEIGHTS: Object.freeze({
+    breakout: 1.25,
+    breakdown: 1.00,
+    vol_spike: 1.35,
+    gap_event: 1.20,
+    trend_up: 1.05,
+    trend_down: 1.00,
+    range: 0.70,
+  })
+});
+const LS_SCN = "joolab_chart_game_scn_hist_v1";
+function loadLastPick(){
+  try{
+    const raw = localStorage.getItem(LS_SCN);
+    if (!raw) return {};
+    const o = JSON.parse(raw);
+    return (o && typeof o === "object") ? o : {};
+  }catch(_e){ return {}; }
+}
+function saveLastPick(o){
+  try{ localStorage.setItem(LS_SCN, JSON.stringify(o||{})); }catch(_e){}
+}
+
+function pickScenarioSlice(bars, meta){
+  const total = bars.length;
+  const need = CFG.HISTORY_BARS + CFG.TURNS + CFG.NEED_EXTRA_BAR_FOR_NEXT_OPEN;
+  const maxStart = total - need;
+  if (maxStart <= 1) return pickRandomSlice(total);
+
+  const closes = bars.map(b=>Number(b.close));
+  const opens  = bars.map(b=>Number(b.open));
+  const vols   = bars.map(b=>Number(b.volume));
+
+  const lastPick = loadLastPick();
+  const lastLabel = lastPick && lastPick.label ? String(lastPick.label) : null;
+
+  const buckets = {
+    breakout: [],
+    breakdown: [],
+    vol_spike: [],
+    gap_event: [],
+    trend_up: [],
+    trend_down: [],
+    range: [],
+  };
+
+  function push(label, start, score){
+    if (!buckets[label]) return;
+    if (!isFinite(score)) return;
+    buckets[label].push({start, score});
+  }
+
+  function mean(arr, s, e){
+    let sum=0, n=0;
+    for(let i=s;i<e;i++){
+      const v = arr[i];
+      if (isFinite(v)){ sum += v; n++; }
+    }
+    return n ? (sum/n) : 0;
+  }
+
+  function maxAbsGapPct(turnS, turnE){
+    let g = 0;
+    for(let i=turnS;i<turnE;i++){
+      const prev = closes[i-1];
+      if (!isFinite(prev) || prev === 0) continue;
+      const gp = Math.abs(opens[i] - prev) / Math.abs(prev);
+      if (gp > g) g = gp;
+    }
+    return g;
+  }
+
+  function slopeLog(turnS, turnE){
+    const n = turnE - turnS;
+    if (n < 12) return 0;
+    let sumX=0, sumY=0, sumXX=0, sumXY=0, cnt=0;
+    for(let i=0;i<n;i++){
+      const y = closes[turnS+i];
+      if (!isFinite(y) || y <= 0) continue;
+      const x = i;
+      const ly = Math.log(y);
+      sumX += x; sumY += ly; sumXX += x*x; sumXY += x*ly; cnt++;
+    }
+    if (cnt < 12) return 0;
+    const denom = cnt*sumXX - sumX*sumX;
+    if (!isFinite(denom) || denom === 0) return 0;
+    return (cnt*sumXY - sumX*sumY) / denom; // log-slope per bar
+  }
+
+  function stdRet(turnS, turnE){
+    let prev = closes[turnS];
+    const arr = [];
+    for(let i=turnS+1;i<turnE;i++){
+      const c = closes[i];
+      if (isFinite(prev) && prev !== 0 && isFinite(c)){
+        arr.push((c - prev)/prev);
+      }
+      prev = c;
+    }
+    if (arr.length < 8) return 0;
+    const m = arr.reduce((a,b)=>a+b,0)/arr.length;
+    const v = arr.reduce((a,b)=>a + (b-m)*(b-m),0)/arr.length;
+    return Math.sqrt(v);
+  }
+
+  for (let start=1; start<=maxStart; start+=SCN.STEP){
+    const histS = start;
+    const histE = start + CFG.HISTORY_BARS;
+    const turnS = histE;
+    const turnE = turnS + CFG.TURNS;
+    const endIdx = turnE - 1;
+
+    const c0 = closes[turnS];
+    const c1 = closes[endIdx];
+    if (!isFinite(c0) || !isFinite(c1) || c0 <= 0) continue;
+
+    // history max/min (close)
+    let histMax = -Infinity, histMin = Infinity;
+    for(let i=histS;i<histE;i++){
+      const c = closes[i];
+      if (!isFinite(c)) continue;
+      if (c > histMax) histMax = c;
+      if (c < histMin) histMin = c;
+    }
+    if (!isFinite(histMax) || !isFinite(histMin) || histMax <= 0) continue;
+
+    const ret = (c1 - c0) / c0;
+
+    const volHistMean = mean(vols, histS, histE) || 1;
+    let volTurnMax = 0;
+    for(let i=turnS;i<turnE;i++){
+      const v = vols[i];
+      if (isFinite(v) && v > volTurnMax) volTurnMax = v;
+    }
+    const volSpike = volTurnMax / volHistMean;
+
+    const gap = maxAbsGapPct(turnS, turnE);
+    const slope = slopeLog(turnS, turnE);
+    const volat = stdRet(turnS, turnE);
+
+    const isBreakout = (c1 >= histMax * 1.02);
+    const isBreakdown = (c1 <= histMin * 0.98);
+
+    if (volSpike >= 2.5){
+      push("vol_spike", start, Math.log(volSpike+1)*10 + Math.abs(ret)*6);
+    }
+    if (gap >= 0.03){
+      push("gap_event", start, gap*100 + Math.log(volSpike+1)*2);
+    }
+    if (isBreakout && ret > 0){
+      push("breakout", start, (c1/histMax - 1)*100 + Math.log(volSpike+1)*3);
+    }
+    if (isBreakdown && ret < 0){
+      push("breakdown", start, (1 - c1/histMin)*100 + Math.log(volSpike+1)*3);
+    }
+    if (slope > 0.0015 && ret > 0.05){
+      push("trend_up", start, slope*10000 + ret*120 + Math.log(volSpike+1)*2);
+    }
+    if (slope < -0.0015 && ret < -0.05){
+      push("trend_down", start, Math.abs(slope)*10000 + Math.abs(ret)*120 + Math.log(volSpike+1)*2);
+    }
+    if (Math.abs(ret) < 0.05 && volat < 0.015){
+      push("range", start, (0.05 - Math.abs(ret))*1000 + (0.015 - volat)*12000);
+    }
+  }
+
+  function dedupe(list){
+    list.sort((a,b)=>b.score-a.score);
+    const out = [];
+    for (const it of list){
+      if (out.every(x=>Math.abs(x.start - it.start) >= SCN.MIN_SEP)){
+        out.push(it);
+      }
+      if (out.length >= SCN.TOP_PER_LABEL) break;
+    }
+    return out;
+  }
+
+  const labels = Object.keys(buckets);
+  const pool = {};
+  labels.forEach(lb => { pool[lb] = dedupe(buckets[lb]); });
+
+  let available = labels.filter(lb => pool[lb].length);
+  if (!available.length) return pickRandomSlice(total);
+
+  // last label avoid (가능하면)
+  if (lastLabel && available.length > 1){
+    const filtered = available.filter(x => x !== lastLabel);
+    if (filtered.length) available = filtered;
+  }
+
+  // weighted label pick
+  const weights = available.map(lb => Number(SCN.WEIGHTS[lb] || 1));
+  const sumW = weights.reduce((a,b)=>a+b,0);
+  let r = Math.random() * sumW;
+  let chosen = available[0];
+  for (let i=0;i<available.length;i++){
+    r -= weights[i];
+    if (r <= 0){ chosen = available[i]; break; }
+  }
+
+  const cand = pool[chosen];
+  const pickN = Math.min(SCN.PICK_TOP_N, cand.length);
+  const chosenCand = cand[Math.floor(Math.random()*pickN)];
+  const slice = {start: chosenCand.start, end: chosenCand.start + need, label: chosen};
+
+  saveLastPick({ticker: (meta && meta.ticker) ? meta.ticker : "", label: chosen, ts: Date.now()});
+  return slice;
+}
+
+
 function calcEquity(state, price){
   return state.cash + state.shares * price;
 }
@@ -989,13 +1211,6 @@ function applyOrderAtCurrentClose(model, side, pct){// bankroll guard
 
   setStatus(`매도 ${Math.round(p*100)}% 체결 완료 (현재 종가 ${sellQtyCap}주)`);
   updateUI(model);
-  // auto settle when fully liquidated
-  if (model.state.shares === 0 && model.state.hasTraded && !model.state.done){
-    // next tick to ensure UI reflects final state
-    setTimeout(()=> endGameAndShowResult(model), 0);
-    return;
-  }
-
 }
 
 
@@ -1023,8 +1238,13 @@ function placeOrderPct(model, pct, side){if (!model || model.state.done) return;
   const qtyEl = document.getElementById("qty");
   if (qtyEl) qtyEl.value = String(estQty);
 
-  // 즉시 체결: 현재 종가 기준 (즉시 없음)
-  applyOrderAtCurrentClose(model, s, p);
+  // 퍼센트 버튼은 '수량 설정'만 수행합니다. 실제 체결은 '매수 즉시'/'매도 즉시' 버튼에서만 됩니다.
+  if (s === "BUY"){
+    setStatus(`매수 ${Math.round(p*100)}% 수량 설정: ${estQty}주. '매수 즉시'를 눌러 체결하십시오.`);
+  } else {
+    setStatus(`매도 ${Math.round(p*100)}% 수량 설정: ${estQty}주. '매도 즉시'를 눌러 체결하십시오.`);
+  }
+  updateUI(model);
 }
 
 
@@ -1072,7 +1292,7 @@ function endGameAndShowResult(model){
   const eq = model.state.cash + model.state.shares * px;
   const startDate = model.bars && model.bars.length ? model.bars[0].date : "-";
   const endDate = last ? last.date : "-";
-  const sym = model.symbol || model.ticker || model.name || "-";
+  const sym = (model && model.meta) ? `${model.meta.name}(${model.meta.ticker})` : "-";
 
   const profit = eq - model.state.startCash;
   const profitPct = model.state.startCash > 0 ? (profit / model.state.startCash * 100) : 0;
@@ -1170,9 +1390,9 @@ async function newGame(){
     if (!validateSliceLen(bars.length)){
       throw new Error("DATA_TOO_SHORT");
     }
-    const slice = pickRandomSlice(bars.length);
-    // ensure slice indices align to end
     const meta = {ticker: pick.ticker, name: pick.name};
+    const slice = pickScenarioSlice(bars, meta);
+    // ensure slice indices align to end
     window.__MODEL = buildModel(meta, bars, slice);
     recalcRisk(window.__MODEL);
     setStatus("시작되었습니다. 매수/매도/관망 후 현재로 진행하십시오.");
@@ -1191,7 +1411,7 @@ function bind(){
   $("#btnHold").addEventListener("click", ()=> {
     setStatus("관망 선택됨. 다음 턴으로 넘어가십시오.");
   });
-  $("#btnClose").addEventListener("click", ()=> closeMarket(window.__MODEL));
+  $("#btnClose").addEventListener("click", ()=> endGameAndShowResult(window.__MODEL));
 
   document.querySelectorAll(".pctBtn").forEach((btn)=>{
     btn.addEventListener("click", ()=>{
