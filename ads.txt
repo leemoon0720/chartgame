@@ -1,2 +1,2 @@
-# AdSense ads.txt
-# AdSense에서 제공하는 ads.txt 한 줄을 아래에 그대로 붙여넣으십시오.
+# AdSense ads.txt (발급받은 값으로 아래 한 줄을 그대로 교체하십시오)
+google.com, pub-XXXXXXXXXXXXXXXX, DIRECT, f08c47fec0942fa0
