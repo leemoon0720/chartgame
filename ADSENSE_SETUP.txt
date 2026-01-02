@@ -1,19 +1,18 @@
-AdSense 연결 메모
-1) index.html <head>의 script src에 ca-pub-XXXXXXXXXXXXXXXX 를 본인 ca-pub-번호로 교체
-2) 광고 자리(ins.adsbygoogle)의 data-ad-client / data-ad-slot 도 AdSense에서 받은 값으로 교체
-3) 광고는 1개만 넣어두었습니다(과도한 광고 자제).
+[AdSense / ads.txt 적용 안내]
 
-거래 규칙(최종):
-- 매수: 현금의 10/30/50/100% 비중으로 즉시 → 현재 '종가'에 체결
-- 매도: 보유수량의 10/30/50/100% 비중으로 즉시 → 현재 '종가'에 체결
+1) 이 배포본에는 루트에 ads.txt가 포함되어 있습니다.
+   경로: /ads.txt
+   내용(1줄):
+   google.com, pub-4131973605995019, DIRECT, f08c47fec0942fa0
 
-거래 규칙(업데이트):
-- 즉시 없음
-- 매수/매도 버튼 클릭 시 '현재 종가(close)' 기준 즉시 체결
-- 매수: 현금의 10/30/50/100% 비중
-- 매도: 보유수량의 10/30/50/100% 비중
+2) AdSense '사이트 소유권 확인'에서 'Ads.txt 스니펫'을 선택하고,
+   위 ads.txt가 공개 접근되는지 확인하십시오.
 
-추가 반영:
-- 수량 입력 매수/매도도 즉시 없이 '현재 종가' 즉시 체결
+3) 정책 위반(콘텐츠 없는 화면 광고) 방지:
+   - 메인(게임) 화면은 JS 앱이라 크롤러가 '콘텐츠 부족'으로 판단할 수 있습니다.
+   - 그래서 index.html 상단에 게임 안내/설명 텍스트(정적 콘텐츠)를 추가했습니다.
+   - 광고는 승인 및 정책 범위 내에서만 노출하십시오.
 
-광고 제거: index.html의 AdSense 스크립트/광고 영역/관련 CSS 삭제 완료
+4) 확인 URL
+   - https://www.joolabgame.kr/ads.txt
+   - https://www.joolabgame.kr/robots.txt
