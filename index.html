@@ -1,240 +1,102 @@
-
-<!DOCTYPE html>
-
+<!doctype html>
 <html lang="ko">
 <head>
-<meta charset="utf-8"/>
-<meta content="width=device-width,initial-scale=1" name="viewport"/>
-<title>주랩 차트게임 v0 (턴제 70턴 · 올랜덤)</title>
-<link href="./style.css" rel="stylesheet"/>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>주랩 게임 & 생활툴</title>
+  <link rel="stylesheet" href="home.css"/>
 </head>
 <body>
-<div class="container">
-<div class="header">
-  <button id="resetBankrollBtn" class="btn secondary" title="돈(자본) 리셋">자본 리셋</button>
+  <div class="wrap">
+    <div class="top">
+      <div class="brand">
+        <h1>주랩 게임 & 생활툴</h1>
+        <div class="sub">홈에서 선택 → 게임/툴로 이동합니다.</div>
+      </div>
+      <div class="nav">
+        <a class="btn" href="chartgame/">차트게임</a>
+        <a class="btn" href="mini/pattern/">캔들 퀴즈</a>
+        <a class="btn" href="mini/levels/">지지·저항</a>
+        <a class="btn" href="mini/reaction/">반응속도</a>
+        <a class="btn" href="life/">생활툴</a>
+      </div>
+    </div>
 
-<div class="brand">
-<h1>주랩 차트게임 v0</h1>
-<div class="sub">단일 종목 · 올랜덤(종목+구간) · 턴제 70턴 · 현재 종가 즉시 체결</div>
-</div>
-<div class="toolbar">
-<button class="btn" id="btnNew">🎲 새 게임(올랜덤)</button>
-<button class="btn secondary" onclick="alert('데이터 교체 방법: /data/universe.json(티커목록) + /data/{ticker}.csv(일봉 OHLCV)로 교체하면 됩니다.\\nCSV 헤더: date,open,high,low,close,volume 입니다.')">ℹ️ 데이터</button>
-</div>
-</div>
-</div>
+    <div class="hero">
+      <h2>승인/정책 안정 구성</h2>
+      <div class="adbox">광고는 “콘텐츠가 있는 화면(홈/가이드)” 중심으로 배치하는 구성이 안전합니다. (게임 화면에는 자동광고/오버레이 비권장)</div>
+      <ul>
+        <li>홈: 안내/가이드/정책 링크 포함</li>
+        <li>게임: 화면 방해 최소(광고 자동 삽입 비권장)</li>
+        <li>생활툴: 계산기 페이지는 콘텐츠로 판단되기 쉬움</li>
+      </ul>
+    </div>
 
-  <section class="card intro" id="intro" aria-label="사이트 안내">
-    <h2>주랩 차트게임</h2>
-    <p>
-      이 페이지는 <strong>차트 읽기</strong>와 <strong>매수·매도 판단</strong>을 연습할 수 있도록 만든 간단한 웹 게임입니다.
-      실제 투자와 동일하지 않으며, 모든 결과는 학습용 예시입니다.
-    </p>
-    <ul>
-      <li><strong>게임 흐름</strong>: 랜덤 종목/구간 → 매수(10/30/50/직접) → 매도(10/30/50/100/직접) → 게임종료(정산)로 수익/손익 확인</li>
-      <li><strong>중요</strong>: 매도는 <u>즉시 체결</u>이 아니라, 버튼을 누를 때마다 주문이 반영되도록 구성되어 있습니다.</li>
-      <li><strong>데이터</strong>: 과거 구간 샘플을 사용하며, 실시간 시세가 아닙니다.</li>
-    </ul>
-    <p class="muted">
-      광고/수익화는 승인 및 정책 범위 내에서만 노출됩니다. 안내 페이지는
-      <a href="about.html">소개</a> / <a href="privacy.html">개인정보</a>에서 확인할 수 있습니다.
-    </p>
-  </section>
+    <div class="grid">
+      <div class="card">
+        <div class="tag">메인</div>
+        <h2>차트게임</h2>
+        <p>과거 차트로 매수/매도 연습. 게임 종료(정산) 기준으로 진행합니다.</p>
+        <div class="row">
+          <a class="btn" href="chartgame/">바로 시작</a>
+          <a class="btn" href="chartgame/about.html">안내</a>
+        </div>
+      </div>
 
+      <div class="card">
+        <div class="tag">미니게임</div>
+        <h2>캔들 패턴 퀴즈</h2>
+        <p>대표 패턴을 보고 정답을 맞추는 퀴즈입니다. 짧게 반복 플레이 가능합니다.</p>
+        <div class="row">
+          <a class="btn" href="mini/pattern/">시작</a>
+        </div>
+      </div>
 
+      <div class="card">
+        <div class="tag">미니게임</div>
+        <h2>지지·저항선 찍기</h2>
+        <p>차트에 선을 찍고, 자동 기준과의 거리로 점수를 매깁니다.</p>
+        <div class="row">
+          <a class="btn" href="mini/levels/">시작</a>
+        </div>
+      </div>
 
-<div class="grid">
-<div class="panel">
-<div class="titlebar">
-<div class="left">
-<div class="name" id="tickerName">-</div>
-<div class="meta" id="metaLine">-</div>
-</div>
-<div class="badge" id="turnBadge">TURN 0/70</div>
-</div>
-<div class="content">
-<div class="canvasWrap">
-<canvas id="chart"></canvas>
-</div>
-<div class="adWrap" aria-label="광고 영역">
-  <div class="adSlot" aria-label="배너 광고 슬롯">
-    <!-- AdSense 배너 유닛을 여기에 삽입하십시오 -->
-  </div>
-</div>
-<div class="smallnote">
-<div>표시는 “현재까지 공개된 구간”만 보여줍니다. 미래 구간은 숨김 처리됩니다.</div>
-<div id="pendingLine">즉시 주문: 없음</div>
-<div id="riskLine">최대낙폭(MDD): - · 실현손익: -</div>
-<div class="hintLine" style="margin-top:8px; color: var(--muted); font-size:12px;">모바일: <b>📈 기록</b>, <b>📜 로그</b>는 상단 버튼으로 열고 닫습니다.</div>
-<div id="status"></div>
-</div>
-</div>
-</div>
-<div class="cards">
-<div class="panel">
-<div class="titlebar">
-<div class="left">
-<div class="name">포트폴리오</div>
-<div class="meta">초기자금 10,000,000원 · 수수료/세금 OFF</div>
-</div>
-<div class="badge">단일계좌</div>
-</div>
-<div class="content">
-<div class="kv">
-<div class="box">
-<p class="k">현금</p>
-<p class="v" id="kCash">-</p>
-</div>
-<div class="box">
-<p class="k">보유수량수량</p>
-<p class="v" id="kShares">-</p>
-</div>
-<div class="box">
-<p class="k">평단</p>
-<p class="v" id="kAvg">-</p>
-</div>
-<div class="box">
-<p class="k">현재가(종가)</p>
-<p class="v" id="kPrice">-</p>
-</div>
-<div class="box">
-<p class="k">총자산</p>
-<p class="v" id="kEquity">-</p>
-</div>
-<div class="box">
-<p class="k">손익</p>
-<p class="v" id="kPnl">-</p>
-</div>
-</div>
-<div class="orderRow">
-<input class="input" id="qty" inputmode="numeric" min="1" step="1" type="number" value="0"/>
-<div class="orderBtns">
-<button class="btn good" id="btnBuy">매수 즉시</button>
-<button class="btn danger" id="btnSell">매도 즉시</button>
-<button class="btn secondary" id="btnHold">관망</button>
-<button class="btn secondary" id="btnClose">게임 종료(정산)</button>
-<button class="btn" id="btnNext">다음 턴</button>
-</div>
-</div>
-<div aria-label="buy percent buttons" class="pctRow">
-<button class="pctBtn" data-side="BUY" data-pct="0.1">매수 10%</button>
-<button class="pctBtn" data-side="BUY" data-pct="0.3">매수 30%</button>
-<button class="pctBtn" data-side="BUY" data-pct="0.5">매수 50%</button>
-<button class="pctBtn" data-side="BUY" data-pct="1.0">매수 100%</button>
-<div class="pctSellRow" style="margin-top:8px;">
-  <button class="pctBtn" data-side="SELL" data-pct="0.1">매도 10%</button>
-  <button class="pctBtn" data-side="SELL" data-pct="0.3">매도 30%</button>
-  <button class="pctBtn" data-side="SELL" data-pct="0.5">매도 50%</button>
-  <button class="pctBtn" data-side="SELL" data-pct="1.0">매도 100%</button>
-</div>
+      <div class="card">
+        <div class="tag">미니게임</div>
+        <h2>반응속도 매매</h2>
+        <p>조건이 나오면 빠르게 버튼을 눌러 점수를 얻습니다.</p>
+        <div class="row">
+          <a class="btn" href="mini/reaction/">시작</a>
+        </div>
+      </div>
 
-</div>
-<div class="smallnote">
-              기준일: <span id="kDate">-</span><br/>
-              매수/매도는 현재 종가(Close)에 즉시 체결됩니다.
-            </div>
-</div>
-</div>
-<div class="panel recPanel">
-<div class="titlebar">
-<div class="left">
-<div class="name">내 누적 기록</div>
-<div class="meta">이 브라우저에 자동 저장됩니다(LocalStorage)</div>
-</div>
-<div class="badge" id="recBadge">0 games</div>
-</div>
-<div class="content">
-<div class="recGrid">
-<div class="box">
-<p class="k">누적 손익</p>
-<p class="v" id="recCumPnl">-</p>
-</div>
-<div class="box">
-<p class="k">평균 수익률</p>
-<p class="v" id="recAvgRet">-</p>
-</div>
-<div class="box">
-<p class="k">승률</p>
-<p class="v" id="recWinRate">-</p>
-</div>
-<div class="box">
-<p class="k">최고/최저</p>
-<p class="v" id="recBestWorst">-</p>
-</div>
-</div>
-<div class="smallnote" style="margin-top:8px;">최근 10게임</div>
-<div class="tableWrap">
-<table class="table">
-<thead>
-<tr>
-<th>#</th>
-<th>종목</th>
-<th>기간</th>
-<th>총자산</th>
-<th>수익률</th>
-<th>MDD</th>
-<th>거래</th>
-</tr>
-</thead>
-<tbody id="recBody"></tbody>
-</table>
-</div>
-<div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;">
-<button class="btn secondary" id="btnRecClear">기록 초기화</button>
-</div>
-</div>
-</div>
-<div class="panel logPanel">
-<div class="titlebar">
-<div class="left">
-<div class="name">거래 로그(최근 50건)</div>
-<div class="meta">턴/일자/체결가/수량/잔고</div>
-</div>
-<div class="badge">자동 기록</div>
-</div>
-<div class="content">
-<div class="tableWrap">
-<table class="table">
-<thead>
-<tr>
-<th>TURN</th>
-<th>일자</th>
-<th>구분</th>
-<th>수량</th>
-<th>가격</th>
-<th>금액</th>
-<th>현금</th>
-<th>보유수량</th>
-<th>비고</th>
-</tr>
-</thead>
-<tbody id="logBody"></tbody>
-</table>
-</div>
-<div class="footer">
-              데이터는 샘플로 동봉되어 있습니다. 실제 데이터로 교체하려면 <code>/data</code> 폴더를 교체하면 됩니다.
-            
-<a href="about.html">소개</a> · <a href="privacy.html">개인정보처리방침</a> · <a href="contact.html">문의</a> · <a href="https://joolab-bigdata.pages.dev/" target="_blank" rel="noopener noreferrer">주랩 빅데이터센터</a></div>
-</div>
-</div>
-</div>
-</div>
-<div class="footer">
-      실행 방법(정적): 이 폴더를 그대로 업로드하면 됩니다(Cloudflare Pages/Netlify 모두 가능).<br/>
-      파일 구성: <code>index.html</code>, <code>style.css</code>, <code>app.js</code>, <code>data/universe.json</code>, <code>data/{ticker}.csv</code>
-</div>
-</div>
-<script src="./app.js"></script>
+      <div class="card">
+        <div class="tag">생활</div>
+        <h2>생활툴 모음</h2>
+        <p>로또/학점/시급/퇴직금/세후급여/이자/대출 계산기.</p>
+        <div class="row">
+          <a class="btn" href="life/">열기</a>
+        </div>
+      </div>
 
-<div id="resultModal" class="modal hidden" role="dialog" aria-modal="true">
-  <div class="modal-card">
-    <div class="modal-title">최종 결과</div>
-    <div id="resultBody" class="modal-body"></div>
-    <div class="modal-actions">
-      <button id="btnResultOk" class="btn">확인</button>
+      <div class="card">
+        <div class="tag">외부</div>
+        <h2>주랩 빅데이터센터</h2>
+        <p>별도 사이트로 연결됩니다.</p>
+        <div class="row">
+          <a class="btn" href="https://joolab-bigdata.pages.dev/" target="_blank" rel="noopener">열기</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <div>
+        <a href="about.html">소개</a> ·
+        <a href="privacy.html">개인정보처리방침</a> ·
+        <a href="contact.html">문의</a>
+      </div>
+      <div>© JOOLAB</div>
     </div>
   </div>
-</div>
-
 </body>
 </html>
