@@ -6,6 +6,7 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1" name="viewport"/>
 <title>주랩 차트게임 v0 (턴제 70턴 · 올랜덤)</title>
+<meta name="description" content="주랩 차트게임: 과거 차트에서 미래 구간을 숨긴 상태로 매수·매도 판단과 리스크 관리(비중/기록/MDD)를 훈련하는 학습용 시뮬레이터입니다."/>
 <link href="./style.css" rel="stylesheet"/>
 </head>
 <body>
@@ -22,6 +23,30 @@
 <button class="btn secondary" onclick="alert('데이터 교체 방법: /data/universe.json(티커목록) + /data/{ticker}.csv(일봉 OHLCV)로 교체하면 됩니다.\\nCSV 헤더: date,open,high,low,close,volume 입니다.')">ℹ️ 데이터</button>
 </div>
 </div>
+</div>
+
+
+<div class="container">
+  <div class="panel">
+    <div class="titlebar">
+      <div class="left">
+        <div class="name">학습 안내</div>
+        <div class="meta">투자 조언이 아닌, 판단·리스크 관리 훈련용 게임입니다</div>
+      </div>
+      <div class="badge">GUIDE</div>
+    </div>
+    <div class="content">
+      <div class="smallnote" style="margin-top:0;">
+        이 게임은 <b>미래 구간을 숨긴 과거 데이터</b>만 보여줍니다. 지금 보이는 정보만으로 “왜 들어가고, 왜 나오는지” 기준을 세우는 연습을 하십시오.<br/>
+        <b>핵심은 수익이 아니라 습관</b>입니다: ① 비율로 나누어 진입하기 ② 손실 구간에서 무리하지 않기 ③ 게임 종료 후 기록(손익/MDD/거래)을 보고 1가지만 개선하기.<br/>
+        처음에는 <b>매수 10%/30%</b> 버튼만 사용하고, 매도도 10%/30%로 나누어 정리하는 방식으로 연습하십시오.
+      </div>
+      <div class="smallnote" style="margin-top:10px;">
+        데이터 교체는 상단 <b>ℹ️ 데이터</b> 버튼 안내대로 <code>/data</code> 폴더를 바꾸면 됩니다. (CSV 헤더: <code>date,open,high,low,close,volume</code>)<br/>
+        안내/정책: <a href="../about.html">소개</a> · <a href="../privacy.html">개인정보처리방침</a> · <a href="../terms.html">이용약관</a> · <a href="../contact.html">문의</a>
+      </div>
+    </div>
+  </div>
 </div>
 
 <div class="grid">
@@ -67,7 +92,7 @@
 <p class="v" id="kCash">-</p>
 </div>
 <div class="box">
-<p class="k">보유수량수량</p>
+<p class="k">보유수량</p>
 <p class="v" id="kShares">-</p>
 </div>
 <div class="box">
@@ -195,7 +220,7 @@
 <div class="footer">
               데이터는 샘플로 동봉되어 있습니다. 실제 데이터로 교체하려면 <code>/data</code> 폴더를 교체하면 됩니다.
             
-<a href="about.html">소개</a> · <a href="privacy.html">개인정보처리방침</a> · <a href="contact.html">문의</a> · <a href="/">홈</a> · <a href="https://joolab-bigdata.pages.dev/" target="_blank" rel="noopener noreferrer">주랩 빅데이터센터</a></div>
+<a href="../about.html">소개</a> · <a href="../privacy.html">개인정보처리방침</a> · <a href="../terms.html">이용약관</a> · <a href="../contact.html">문의</a> · <a href="/">홈</a> · <a href="https://joolab-bigdata.pages.dev/" target="_blank" rel="noopener noreferrer">주랩 빅데이터센터</a></div>
 </div>
 </div>
 </div>
